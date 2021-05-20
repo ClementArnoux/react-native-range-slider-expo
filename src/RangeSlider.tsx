@@ -26,7 +26,8 @@ interface SliderProps {
     showRangeLabels?: boolean,
     showValueLabels?: boolean,
     initialFromValue?: number,
-    initialToValue?: number
+    initialToValue?: number,
+    labels?: Object
 }
 
 export default ({
@@ -43,7 +44,8 @@ export default ({
     showRangeLabels = true,
     showValueLabels = true,
     initialFromValue,
-    initialToValue
+    initialToValue,
+    labels = null,
 }: SliderProps) => {
 
     // settings
@@ -83,8 +85,15 @@ export default ({
     useEffect(() => {
         if (wasInitialized) {
             const stepSize = setStepSize(max, min, step);
-            fromValueTextRef.current?.setNativeProps({ text: min.toString() });
-            toValueTextRef.current?.setNativeProps({ text: max.toString() });
+            if (labels) {
+                fromValueTextRef.current?.setNativeProps({ text: labels[min] });
+                toValueTextRef.current?.setNativeProps({ text: labels[max] });
+            }
+            else {
+                fromValueTextRef.current?.setNativeProps({ text: min.toString() });
+                toValueTextRef.current?.setNativeProps({ text: max.toString() });
+            }
+
             if (typeof initialFromValue === 'number' && initialFromValue >= min && initialFromValue <= max) {
                 const offset = ((initialFromValue - min) / step) * stepSize - (knobSize / 2);
                 setFromValueStatic(offset, knobSize, stepSize);
@@ -138,11 +147,17 @@ export default ({
     const setValueText = (totalOffset: number, from = true) => {
         if (from && fromValueTextRef != null) {
             const numericValue: number = Math.floor(((totalOffset + (knobSize / 2)) * (max - min) / sliderWidth) / step) * step + min;
-            fromValueTextRef.current?.setNativeProps({ text: numericValue.toString() });
+            if (labels)
+                fromValueTextRef.current?.setNativeProps({ text: labels[numericValue] });
+            else
+                fromValueTextRef.current?.setNativeProps({ text: numericValue.toString() });
         }
         else if (from === false && toValueTextRef != null) {
             const numericValue: number = Math.ceil(((totalOffset + (knobSize / 2)) * (max - min) / sliderWidth) / step) * step + min;
-            toValueTextRef.current?.setNativeProps({ text: numericValue.toString() });
+            if (labels)
+                toValueTextRef.current?.setNativeProps({ text: labels[numericValue] });
+            else
+                toValueTextRef.current?.setNativeProps({ text: numericValue.toString() });
         }
     }
 
@@ -281,10 +296,17 @@ export default ({
                 </PanGestureHandler>
             </View>
             {
-                showRangeLabels &&
+                showRangeLabels && !labels &&
                 <View style={{ width: '100%', flexDirection, justifyContent: 'space-between' }}>
                     <Text style={{ color: rangeLabelsTextColor, fontWeight: "bold", fontSize }}>{min}</Text>
                     <Text style={{ color: rangeLabelsTextColor, fontWeight: "bold", fontSize }}>{max}</Text>
+                </View>
+            }
+            {
+                showRangeLabels && labels &&
+                <View style={{ width: '100%', flexDirection, justifyContent: 'space-between' }}>
+                    <Text style={{ color: rangeLabelsTextColor, fontWeight: "bold", fontSize }}>{labels[min]}</Text>
+                    <Text style={{ color: rangeLabelsTextColor, fontWeight: "bold", fontSize }}>{labels[max]}</Text>
                 </View>
             }
         </Animated.View>
